@@ -271,11 +271,26 @@ def main(args):
     test_loss, test_acc, test_time_taken = evaluate(model, loss_fn, test_loader, device)
     logger.info(f"Time taken = {test_time_taken}, test accuracy = {test_acc}, test loss = {test_loss}")
 
+    # create a train loader with only test transforms.
+    # the original dataloader has train transforms (which may contain horizontal flip etc)
+    logger.info("Constructing evaluate train dataset and train loader")
+    evaluate_train_dataset = ImageDataset(
+        image_paths=train_image_paths,
+        labels=train_labels,
+        transforms=test_transforms,
+        label2idx=label2idx
+    )
+    logger.info(f"Length of evaluate train dataset = {len(evaluate_train_dataset)}")
+    evaluate_train_loader = DataLoader(
+        evaluate_train_dataset,
+        batch_size=args.batch_size,
+        shuffle=False
+    )
+
     # gather the embeddings on train data.
     # so that we can calculate the mean, covariances for each class.
-    # we also gather labels, because train loader shuffle is True, so the order at which the data appears changes
     logger.info("Gathering embeddings on train data")
-    train_embds_array, _, train_labels_array = utils.gather_preds_and_embeddings(model, train_loader, device, gather_labels=True)
+    train_embds_array, _, train_labels_array = utils.gather_preds_and_embeddings(model, evaluate_train_loader, device, gather_labels=True)
 
     logger.info("Number of layers = {} from which embeddings are extracted".format(len(train_embds_array))) # type: ignore
 
