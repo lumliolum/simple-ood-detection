@@ -5,6 +5,8 @@ pip3 install torch==1.13.1+cpu -f https://download.pytorch.org/whl/torch/
 pip3 install torchvision==0.14.1+cpu -f https://download.pytorch.org/whl/torchvision/
 pip3 install matplotlib==3.7.1
 pip3 install loguru
+pip3 install pandas
+pip3 install scikit-learn
 
 
 # check this

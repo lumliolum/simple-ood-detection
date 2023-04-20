@@ -162,7 +162,7 @@ def mahalanobis(embds, mean, cov):
     # (N, D) - (1, D) = (N, D)
     ec = embds - mean[None, :]
     # NxD x DxD x DxN = NxN
-    distance_matrix = np.dot(ec, np.dot(np.linalg.inv(cov), np.transpose(ec)))
+    distance_matrix = np.dot(ec, np.dot(np.linalg.pinv(cov), np.transpose(ec)))
     # to get the distances, take out value of the main diagonal of the matrix.
     # to get the confidence, multiply the distance by -1.
     confidences = -np.diag(distance_matrix)
@@ -194,7 +194,7 @@ def calculate_mean_and_cov_matrix(embds: List[np.ndarray], labels: np.ndarray) -
             # mean -> (D,)
             mean_layer_label_embds = np.mean(layer_label_embds, axis=0)
             # X -> (N, D)
-            X = layer_embds - mean_layer_label_embds[None, :]
+            X = layer_label_embds - mean_layer_label_embds[None, :]
             # here I am not dividing it by number of samples, so technically it is not covariance matrix
             cov_layer_label_embds = np.dot(np.transpose(X), X)
 
@@ -225,12 +225,11 @@ def calculate_ood_metrics(data: pd.DataFrame, known_classes: List, unknown_class
     """
     # reqtpr means required tpr.
     reqtpr = 0.95
-    num_samples = len(data)
     sorted_data = data.sort_values(by=["confidence"], ascending=False).reset_index()
     # in_gt -> 1 means in-distribution class and 0 mean out-distribution class.
     sorted_data["in_gt"] = 0
     sorted_data.loc[sorted_data["gt"].isin(known_classes), "in_gt"] = 1
-    index = np.searchsorted(sorted_data["in_gt"].cumsum(), int(reqtpr * num_samples))
+    index = np.searchsorted(sorted_data["in_gt"].cumsum(), int(reqtpr * sorted_data["in_gt"].sum()))
     threshold = sorted_data["confidence"][index]
 
     # tnr, tpr @ tpr = 0.95

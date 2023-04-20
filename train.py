@@ -248,7 +248,7 @@ def main(args):
         else:
             change_epoch_counter += 1
             if change_epoch_counter >= args.early_stopping_epochs:
-                logger.warning("Early stopping reached as validation acc didn't increase for {args.early_stopping_epochs} epochs")
+                logger.warning(f"Early stopping reached as validation acc didn't increase for {args.early_stopping_epochs} epochs")
                 break
 
     logger.info("Training Completed")
@@ -366,6 +366,9 @@ def main(args):
 
     new_test_df["confidence"] = new_test_scores
     logger.info(f"New test data stored in dataframe, shape = {new_test_df.shape}")
+    df_save_path = os.path.join(args.output_dir, "new_test_df.csv")
+    logger.info(f"Saving the dataframe to csv at path = {df_save_path}")
+    new_test_df.to_csv(df_save_path, index=False)
 
     logger.info("Calculate the metrics on new test data")
     new_test_metrics = utils.calculate_ood_metrics(new_test_df, known_classes, unknown_classes)
