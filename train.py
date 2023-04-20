@@ -143,8 +143,9 @@ def main(args):
     )
 
     logger.info("Initializing model with backbone model = {}".format(args.model))
-    # by default I am using imagenet v2 weights.
-    pretrained_weights = torchvision.models.get_model_weights(args.model).IMAGENET1K_V2 # type: ignore
+    # taking the default weights given by pytorch.
+    # for example resnet50 -> v2 weights are default and resnet34 -> v1 weights are default
+    pretrained_weights = torchvision.models.get_model_weights(args.model).DEFAULT # type: ignore
     logger.info(f"Pretrained weights = {pretrained_weights}")
     backbone = torchvision.models.get_model(args.model, weights=pretrained_weights)
     model = OODResNetModel(backbone, num_classes=len(label2idx)) # type: ignore
@@ -299,6 +300,7 @@ def main(args):
     train_means, train_tied_covs = utils.calculate_mean_and_cov_matrix(train_embds_array, train_labels_array) # type: ignore
 
     # load the test data which contains both known and unknown samples
+    logger.info(f"Reading the image paths, labels from the test directory = {args.test_data_path}")
     new_test_image_paths, new_test_labels = utils.get_image_paths_and_labels(
         dirpath=args.test_data_path,
         include_classes=known_classes + unknown_classes
@@ -331,6 +333,8 @@ def main(args):
         train_mean = train_means[layer_index]
         train_tied_cov = train_tied_covs[layer_index]
 
+        logger.info(f"layer index = {layer_index + 1}, covariance matrix shape = {train_tied_cov.shape}")
+
         # create an zero matrix for this layer confidences -> (num samples, num classes)
         test_layer_confidence_matrix = np.zeros((len(test_layer_embds), len(train_mean)))
 
@@ -358,7 +362,7 @@ def main(args):
     new_test_df = pd.DataFrame()
     new_test_df["image_paths"] = new_test_image_paths
     new_test_df["gt"] = new_test_labels
-    
+
     # store the prediction coming from the resnet softmax layer.
     new_test_df["pred"] = new_test_preds_array
     # as these are model idx convert them to labels.

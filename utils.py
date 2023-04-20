@@ -41,6 +41,7 @@ class MovingAverage:
         return self.val
 
 
+# https://pytorch.org/docs/stable/notes/randomness.html#cuda-convolution-determinism
 def set_seed(seed: int, device=torch.device("cuda")) -> None:
     random.seed(seed)
     np.random.seed(seed)
@@ -48,6 +49,7 @@ def set_seed(seed: int, device=torch.device("cuda")) -> None:
     if torch.cuda.is_available() and device == torch.device("cuda"):
         torch.cuda.manual_seed(seed)
         torch.backends.cudnn.benchmark = False # type: ignore
+        torch.backends.cudnn.deterministic = True # type: ignore
 
 
 # see -> https://pytorch.org/docs/stable/notes/randomness.html#dataloader
