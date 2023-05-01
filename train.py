@@ -13,9 +13,10 @@ from torch.utils.data import DataLoader
 from sklearn.model_selection import train_test_split
 
 import utils
-from engine import train_one_epoch, evaluate
+from collator import Collator
 from arguments import get_parser
 from models import OODResNetModel
+from engine import train_one_epoch, evaluate
 from dataset import ImageDataset, ImageTestDataset
 from transforms import get_train_transforms, get_test_transforms
 
@@ -114,7 +115,13 @@ def main(args):
     logger.info(f"Length of Val dataset = {len(val_dataset)}")
     logger.info(f"Length of Test dataset = {len(test_dataset)}")
 
+
     logger.info(f"Initializing data loaders, using batch size = {args.batch_size}")
+
+    # depending on the usage cutmix alpha, collator function will change.
+    logger.info(f"Received cutmix alpha value = {args.cutmix_alpha}")
+    collator = Collator(num_classes=len(label2idx), cutmix_alpha=args.cutmix_alpha)
+
     genet = torch.Generator()
     genet.manual_seed(args.seed)
     train_loader = DataLoader(
@@ -123,6 +130,7 @@ def main(args):
         shuffle=True,
         num_workers=args.num_workers,
         worker_init_fn=utils.set_worker_seed,
+        collate_fn=collator.collate_fn,
         generator=genet
     )
     val_loader = DataLoader(
@@ -225,11 +233,11 @@ def main(args):
         # https://github.com/pytorch/pytorch/issues/76113
         lr_schedule.append(lr_scheduler.get_last_lr()[0])
 
-        train_loss, train_acc, train_time_taken = train_one_epoch(model, loss_fn, optimizer, train_loader, device)
+        train_loss, train_time_taken = train_one_epoch(model, loss_fn, optimizer, train_loader, device)
         val_loss, val_acc, val_time_taken = evaluate(model, loss_fn, val_loader, device)
         lr_scheduler.step()
 
-        logmsg = f"Epoch = {epoch + 1}/{args.epochs}, time taken = {train_time_taken + val_time_taken} seconds, train loss = {train_loss}, train acc = {train_acc}, val loss = {val_loss}, val acc = {val_acc}"
+        logmsg = f"Epoch = {epoch + 1}/{args.epochs}, time taken = {train_time_taken + val_time_taken} seconds, train loss = {train_loss}, val loss = {val_loss}, val acc = {val_acc}"
         logger.info(logmsg)
 
         if val_acc > best_validation_acc:
@@ -349,7 +357,7 @@ def main(args):
         test_layer_confidences = np.max(test_layer_confidence_matrix, axis=1)
 
         new_test_score_matrix[:, layer_index] = test_layer_confidences
-    
+
     # take the mean along the layers to get the final score for each test sample
     # in the paper they have used different weights to combined scores from each layer.
     # these weights were learned from logistic regression on validation data.

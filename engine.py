@@ -6,36 +6,30 @@ import torch
 import utils
 
 
-def train_one_epoch(model, loss_fn, optimizer, data_loader, device) -> Tuple[float, float, int]:
+def train_one_epoch(model, loss_fn, optimizer, data_loader, device) -> Tuple[float, int]:
     model.train()
     optimizer.zero_grad()
 
     t1 = time.time()
     train_loss = utils.MovingAverage(name="train-loss")
-    train_acc = utils.MovingAverage(name="train-acc")
 
     for batch in data_loader:
-        img = batch["image"].to(device).float()
-        label = batch["label"].to(device).long()
+        img = batch["image"].to(device)
+        target = batch["label"].to(device)
 
         out, _ = model(img)
-        loss = loss_fn(out, label)
-
-        with torch.no_grad():
-            pred = torch.argmax(out, dim=1)
-            acc = torch.mean(pred == label, dtype=torch.float32)
+        loss = loss_fn(out, target)
 
         loss.backward()
         optimizer.step()
         optimizer.zero_grad()
 
         train_loss.update(loss.item())
-        train_acc.update(acc.item())
 
     t2 = time.time()
     timetaken = round(t2 - t1)
 
-    return train_loss.value(), train_acc.value(), timetaken
+    return train_loss.value(), timetaken
 
 
 def evaluate(model, loss_fn, data_loader, device):

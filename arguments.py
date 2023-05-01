@@ -35,6 +35,9 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--random-erase-prob", type=float, default=0.0, help="probability of random erase augmentation. default value is 0.0"
     )
+    parser.add_argument(
+        "--cutmix-alpha", type=float, default=0.0, help="alpha parameter for cutmix alpha. If 0 is given then cutmix will not be applied while training."
+    )
 
     parser.add_argument(
         "--batch-size", type=int, default=32, help="batch size for training. If not provided, default value 32 will be used."

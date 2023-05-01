@@ -9,6 +9,7 @@ python3 train.py \
     --test-crop-size 32 \
     --hflip-prob 0.5 \
     --random-erase-prob 0.1 \
+    --cutmix-alpha 1.0 \
     --batch-size 32 \
     --num-workers 4 \
     --epochs 30 \
