@@ -38,6 +38,10 @@ $$
 s = \frac{1}{L} \sum_{l} M_{l}
 $$
 
+$$
+M_{l} = \max_{c} -(f_{l}(x) - \hat{\mu_{c,l}})^{T} \hat{\Sigma_{l}}^{-1} (f_{l}(x) - \hat{\mu_{c,l}})
+$$
+
 where $L$ denotes number of layers.
 
 So if we consider base model as `resnet-34` and embedding is constructed by taking the feature vector after each skip connection, we will get $3 + 4 + 6 + 3 = 16$ layers. Please refer to below resnet layer belows (taken from the original paper.)
