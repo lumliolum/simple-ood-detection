@@ -109,7 +109,7 @@ def main(args):
         image_paths=test_image_paths,
         labels=test_labels,
         transforms=test_transforms,
-        label2idx=label2idx        
+        label2idx=label2idx
     )
     logger.info(f"Length of Train dataset = {len(train_dataset)}")
     logger.info(f"Length of Val dataset = {len(val_dataset)}")
